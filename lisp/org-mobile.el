@@ -1064,6 +1064,18 @@ be returned that indicates what went wrong."
 	  (org-set-tags nil 'align))
 	 (t (error "Heading changed in MobileOrg and on the computer")))))
 
+     ((eq what 'newheading)
+      (cond
+       ((or t ; maybe check new for validity instead?
+	    (eq org-mobile-force-mobile-change t)
+	    (memq 'tags org-mobile-force-mobile-change))
+        (save-excursion
+	  (end-of-line 1)
+	  (org-insert-heading-respect-content)
+	  (org-demote)
+          (insert new)))
+       (t (error "New heading could not be created"))))
+
      ((eq what 'body)
       (setq current (buffer-substring (min (1+ (point-at-eol)) (point-max))
 				      (save-excursion (outline-next-heading)
