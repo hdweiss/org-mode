@@ -1076,6 +1076,45 @@ be returned that indicates what went wrong."
           (insert new)))
        (t (error "New heading could not be created"))))
 
+     ((eq what 'delete)
+      (setq current (buffer-substring (point-at-bol) (save-excursion
+						       (org-goto-sibling)
+						       (point-at-bol))))
+      (cond
+       ((or t ; do check here
+	    (eq org-mobile-force-mobile-change t)
+	    (memq 'tags org-mobile-force-mobile-change))
+	(beginning-of-line 1)
+	(delete-region (point-at-bol)
+		       (save-excursion (org-goto-sibling)
+				       (point-at-bol))))
+       (t (error "Could not delete heading"))))
+
+     ((eq what 'archive)
+      (setq current (buffer-substring (point-at-bol) (save-excursion
+						       (org-goto-sibling)
+						       (point-at-bol))))
+      (cond
+       ((or t ; do check here
+	    (eq org-mobile-force-mobile-change t)
+	    (memq 'tags org-mobile-force-mobile-change))
+	(beginning-of-line 1)
+	(org-archive-to-archive-sibling))
+       (t (error "Could not archive heading"))))
+
+     ((eq what 'refile)
+      (setq current (buffer-substring (point-at-bol) (save-excursion
+						       (org-goto-sibling)
+						       (point-at-bol))))
+      (cond
+       ((or t ; do check here
+	    (eq org-mobile-force-mobile-change t)
+	    (memq 'tags org-mobile-force-mobile-change))
+	(beginning-of-line 1)
+	(org-refile))
+       (t (error "Could not refile heading"))))
+
+
      ((eq what 'body)
       (setq current (buffer-substring (min (1+ (point-at-eol)) (point-max))
 				      (save-excursion (outline-next-heading)
