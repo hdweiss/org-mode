@@ -843,7 +843,7 @@ If BEG and END are given, only do this in that region."
       (if (or (not id-pos) (stringp id-pos))
 	  (progn
 	    (goto-char (+ 2 (point-at-bol)))
-	    (insert id-pos " ")
+	    (when id-pos (insert id-pos " "))
 	    (incf cnt-error))
 	(add-text-properties (point-at-bol) (point-at-eol)
 			     (list 'org-mobile-marker
@@ -990,7 +990,15 @@ is currently a noop.")
   (if (string-match "\\`id:\\(.*\\)$" link)
       (org-id-find (match-string 1 link) 'marker)
     (if (not (string-match "\\`olp:\\(.*?\\):\\(.*\\)$" link))
-	nil
+	; not found with path, but maybe it is to be inserted
+	; in top level of the file?
+	(if (not (string-match "\\`olp:\\(.*?\\)$" link))
+	    nil
+	  (let ((file (match-string 1 link)))
+	    (setq file (org-link-unescape file))
+	    (setq file (expand-file-name file org-directory))
+	    (org-find-olp (list file)))
+	  )
       (let ((file (match-string 1 link))
 	    (path (match-string 2 link)))
 	(setq file (org-link-unescape file))
