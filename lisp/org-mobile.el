@@ -913,9 +913,10 @@ If BEG and END are given, only do this in that region."
 		  (org-with-point-at id-pos
 		    (progn
 		  (eval cmd)
-		  (if (member "FLAGGED" (org-get-tags))
+		  (unless (equal data "delete")
+		    (if (member "FLAGGED" (org-get-tags))
 		      (add-to-list 'org-mobile-last-flagged-files
-				   (buffer-file-name (current-buffer))))))
+				   (buffer-file-name (current-buffer)))))))
 		(error (setq org-mobile-error msg))))
 	    (when org-mobile-error
 	      (org-pop-to-buffer-same-window (marker-buffer marker))
@@ -1076,55 +1077,19 @@ be returned that indicates what went wrong."
 	 (t (error "Heading changed in MobileOrg and on the computer")))))
 
      ((eq what 'newheading)
-      (cond
-       ((or t ; maybe check new for validity instead?
-	    (eq org-mobile-force-mobile-change t)
-	    (memq 'tags org-mobile-force-mobile-change))
-        (save-excursion
-	  (end-of-line 1)
-	  (org-insert-heading-respect-content)
-	  (org-demote)
-          (insert new)))
-       (t (error "New heading could not be created"))))
+      (end-of-line 1)
+      (org-insert-heading-respect-content)
+      (org-demote)
+      (insert new))
 
      ((eq what 'delete)
-      (setq current (buffer-substring (point-at-bol) (save-excursion
-						       (org-goto-sibling)
-						       (point-at-bol))))
-      (cond
-       ((or t ; do check here
-	    (eq org-mobile-force-mobile-change t)
-	    (memq 'tags org-mobile-force-mobile-change))
-	(beginning-of-line 1)
-	(delete-region (point-at-bol)
-		       (save-excursion (org-goto-sibling)
-				       (point-at-bol))))
-       (t (error "Could not delete heading"))))
+      (org-cut-subtree))
 
      ((eq what 'archive)
-      (setq current (buffer-substring (point-at-bol) (save-excursion
-						       (org-goto-sibling)
-						       (point-at-bol))))
-      (cond
-       ((or t ; do check here
-	    (eq org-mobile-force-mobile-change t)
-	    (memq 'tags org-mobile-force-mobile-change))
-	(beginning-of-line 1)
-	(org-archive-to-archive-sibling))
-       (t (error "Could not archive heading"))))
+      (org-archive-to-archive-sibling))
 
      ((eq what 'refile)
-      (setq current (buffer-substring (point-at-bol) (save-excursion
-						       (org-goto-sibling)
-						       (point-at-bol))))
-      (cond
-       ((or t ; do check here
-	    (eq org-mobile-force-mobile-change t)
-	    (memq 'tags org-mobile-force-mobile-change))
-	(beginning-of-line 1)
-	(org-refile))
-       (t (error "Could not refile heading"))))
-
+      (org-refile))
 
      ((eq what 'body)
       (setq current (buffer-substring (min (1+ (point-at-eol)) (point-max))
