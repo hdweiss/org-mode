@@ -913,7 +913,9 @@ If BEG and END are given, only do this in that region."
 		  (org-with-point-at id-pos
 		    (progn
 		  (eval cmd)
-		  (unless (equal data "delete")
+		  (unless (or (equal data "delete")
+			      (equal data "archive")
+			      (equal data "archive-sibling"))
 		    (if (member "FLAGGED" (org-get-tags))
 		      (add-to-list 'org-mobile-last-flagged-files
 				   (buffer-file-name (current-buffer)))))))
@@ -1086,6 +1088,9 @@ be returned that indicates what went wrong."
       (org-cut-subtree))
 
      ((eq what 'archive)
+      (org-archive-subtree))
+
+     ((eq what 'archive-sibling)
       (org-archive-to-archive-sibling))
 
      ((eq what 'refile)
