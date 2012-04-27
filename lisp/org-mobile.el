@@ -1094,8 +1094,13 @@ be returned that indicates what went wrong."
       (org-archive-to-archive-sibling))
 
      ((eq what 'refile)
-      (org-refile))
-
+      (org-copy-subtree)
+      (org-with-point-at (org-mobile-locate-entry new)
+	(setq level (org-get-valid-level (funcall outline-level) 1))
+	(org-end-of-subtree t t)
+	(org-paste-subtree level))
+      (org-cut-subtree))
+      
      ((eq what 'body)
       (setq current (buffer-substring (min (1+ (point-at-eol)) (point-max))
 				      (save-excursion (outline-next-heading)
