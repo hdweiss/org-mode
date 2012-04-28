@@ -915,7 +915,8 @@ If BEG and END are given, only do this in that region."
 		  (eval cmd)
 		  (unless (or (equal data "delete")
 			      (equal data "archive")
-			      (equal data "archive-sibling"))
+			      (equal data "archive-sibling")
+			      (equal data "newheading"))
 		    (if (member "FLAGGED" (org-get-tags))
 		      (add-to-list 'org-mobile-last-flagged-files
 				   (buffer-file-name (current-buffer)))))))
@@ -1002,9 +1003,13 @@ is currently a noop.")
 	    (setq file (expand-file-name file org-directory))
 	    (save-excursion
 	      (find-file file)
-	      (goto-char (point-min))
-	      (if (re-search-forward org-heading-regexp nil t)
-		  (move-marker (make-marker) (point))))))
+	      (goto-char (point-max))
+	      (newline)
+	      (goto-char (point-max))
+	      (move-marker (make-marker) (point))
+;	      (if (re-search-forward org-heading-regexp nil t)
+					;		  (move-marker (make-marker) (point))
+			 )))
       (let ((file (match-string 1 link))
 	    (path (match-string 2 link)))
 	(setq file (org-link-unescape file))
@@ -1079,11 +1084,26 @@ be returned that indicates what went wrong."
 	 (t (error "Heading changed in MobileOrg and on the computer")))))
 
      ((eq what 'newheading)
-      (end-of-line 1)
-      (org-insert-heading-respect-content)
-      (org-demote)
+      (if (org-on-heading-p) ; if false we are in top-level of file
+	  (progn
+	    (end-of-line 1)
+	    (org-insert-heading-respect-content)
+	    (org-demote))
+	(beginning-of-line)
+	(insert "* "))
       (insert new))
 
+     ((eq what 'refile)
+      (org-copy-subtree)
+      (org-with-point-at (org-mobile-locate-entry new)
+	(if (org-on-heading-p) ; if false we are in top-level of file
+	    (progn
+	      (setq level (org-get-valid-level (funcall outline-level) 1))
+	      (org-end-of-subtree t t)
+	      (org-paste-subtree level))
+	(org-paste-subtree 1)))
+	(org-cut-subtree))
+      
      ((eq what 'delete)
       (org-cut-subtree))
 
@@ -1093,14 +1113,6 @@ be returned that indicates what went wrong."
      ((eq what 'archive-sibling)
       (org-archive-to-archive-sibling))
 
-     ((eq what 'refile)
-      (org-copy-subtree)
-      (org-with-point-at (org-mobile-locate-entry new)
-	(setq level (org-get-valid-level (funcall outline-level) 1))
-	(org-end-of-subtree t t)
-	(org-paste-subtree level))
-      (org-cut-subtree))
-      
      ((eq what 'body)
       (setq current (buffer-substring (min (1+ (point-at-eol)) (point-max))
 				      (save-excursion (outline-next-heading)
