@@ -1083,7 +1083,7 @@ be returned that indicates what went wrong."
 	  (org-set-tags nil 'align))
 	 (t (error "Heading changed in MobileOrg and on the computer")))))
 
-     ((eq what 'newheading)
+     ((eq what 'addheading)
       (if (org-on-heading-p) ; if false we are in top-level of file
 	  (progn
 	    (end-of-line 1)
