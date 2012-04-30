@@ -823,33 +823,13 @@ If BEG and END are given, only do this in that region."
 	id-pos org-mobile-error)
 
     ;; Count the new captures
-    ;; (goto-char beg)
-    ;; (while (re-search-forward "^\\* \\(.*\\)" end t)
-    ;;   (and (>= (- (match-end 1) (match-beginning 1)) 2)
-    ;; 	   (not (equal (downcase (substring (match-string 1) 0 2)) "f("))
-    ;; 	   (incf cnt-new)))
+    (goto-char beg)
+    (while (re-search-forward "^\\* \\(.*\\)" end t)
+      (and (>= (- (match-end 1) (match-beginning 1)) 2)
+	   (not (equal (downcase (substring (match-string 1) 0 2)) "f("))
+	   (incf cnt-new)))
 
-    ;; (goto-char beg)
-    ;; (while (re-search-forward
-    ;; 	    "^\\*+[ \t]+F(\\([^():\n]*\\)\\(:\\([^()\n]*\\)\\)?)[ \t]+\\[\\[\\(\\(id\\|olp\\):\\([^]\n]+\\)\\)" end t)
-    ;;   (setq id-pos (condition-case msg
-    ;; 		       (org-mobile-locate-entry (match-string 4))
-    ;; 		     (error (nth 1 msg))))
-    ;;   (when (and (markerp id-pos)
-    ;; 		 (not (member (marker-buffer id-pos) buf-list)))
-    ;; 	(org-mobile-timestamp-buffer (marker-buffer id-pos))
-    ;; 	(push (marker-buffer id-pos) buf-list))
-
-    ;;   (if (or (not id-pos) (stringp id-pos))
-    ;; 	  (progn
-    ;; 	    (goto-char (+ 2 (point-at-bol)))
-    ;; 	    (when id-pos (insert id-pos " "))
-    ;; 	    (incf cnt-error))
-    ;; 	(add-text-properties (point-at-bol) (point-at-eol)
-    ;; 			     (list 'org-mobile-marker
-    ;; 				   (or id-pos "Linked entry not found")))))
-
-    ;; OK, now go back and start applying
+    ;; Find and apply the edits
     (goto-char beg)
     (while (re-search-forward
 	    "^\\*+[ \t]+F(\\([^():\n]*\\)\\(:\\([^()\n]*\\)\\)?)[ \t]+\\[\\[\\(\\(id\\|olp\\):\\([^]\n]+\\)\\)" end t)
@@ -875,6 +855,21 @@ If BEG and END are given, only do this in that region."
 		 old new)
 
 	    (goto-char bos)
+	    (when (and (markerp id-pos)
+		       (not (member (marker-buffer id-pos) buf-list)))
+	      (org-mobile-timestamp-buffer (marker-buffer id-pos))
+	      (push (marker-buffer id-pos) buf-list))
+	    (unless (markerp id-pos)
+	      (goto-char (+ 2 (point-at-bol)))
+	      (if (stringp id-pos)
+		  (insert id-pos " ")
+		(insert "BAD REFERENCE "))
+		(incf cnt-error)
+		(throw 'next t))
+	    (unless cmd
+	      (insert "BAD FLAG ")
+	      (incf cnt-error)
+	      (throw 'next t))
 	    (move-marker bos-marker (point))
 	    (if (re-search-forward "^** Old value[ \t]*$" eos t)
 		(setq old (buffer-substring
@@ -897,14 +892,6 @@ If BEG and END are given, only do this in that region."
 	      (setq new (and new (org-trim new))
 		    old (and old (org-trim old))))
 	    (goto-char (+ 2 bos-marker))
-	    (unless (markerp id-pos)
-	      (insert "BAD REFERENCE ")
-	      (incf cnt-error)
-	      (throw 'next t))
-	    (unless cmd
-	      (insert "BAD FLAG ")
-	      (incf cnt-error)
-	      (throw 'next t))
 	    ;; Remember this place so that we can return
 	    (move-marker marker (point))
 	    (setq org-mobile-error nil)
@@ -913,10 +900,7 @@ If BEG and END are given, only do this in that region."
 		  (org-with-point-at id-pos
 		    (progn
 		  (eval cmd)
-		  (unless (or (equal data "delete")
-			      (equal data "archive")
-			      (equal data "archive-sibling")
-			      (equal data "newheading"))
+		  (unless (member data (list "delete" "archive" "archive-sibling" "newheading"))
 		    (if (member "FLAGGED" (org-get-tags))
 		      (add-to-list 'org-mobile-last-flagged-files
 				   (buffer-file-name (current-buffer)))))))
