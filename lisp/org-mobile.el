@@ -900,7 +900,7 @@ If BEG and END are given, only do this in that region."
 		  (org-with-point-at id-pos
 		    (progn
 		  (eval cmd)
-		  (unless (member data (list "delete" "archive" "archive-sibling" "newheading"))
+		  (unless (member data (list "delete" "archive" "archive-sibling" "addheading"))
 		    (if (member "FLAGGED" (org-get-tags))
 		      (add-to-list 'org-mobile-last-flagged-files
 				   (buffer-file-name (current-buffer)))))))
