@@ -593,7 +593,7 @@ The table of checksums is written to the file mobile-checksums."
 		(cons (list 'org-agenda-title-append
 			    (concat "<after>KEYS=" gkey "#" (number-to-string
 							     (setq cnt (1+ cnt)))
-				    " TITLE: " gdesc " " match "</after>"))
+				    " TITLE: " gdesc "</after>"))
 		      settings))
 	  (push (list type match settings) new)))))
     (and new (list "X" "SUMO" (reverse new)
